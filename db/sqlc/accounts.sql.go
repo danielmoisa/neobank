@@ -115,6 +115,7 @@ const updateAccount = `-- name: UpdateAccount :one
 UPDATE accounts
 SET balance = $2
 WHERE id = $1
+
 RETURNING id, created_at, updated_at, owner, balance, currency
 `
 
