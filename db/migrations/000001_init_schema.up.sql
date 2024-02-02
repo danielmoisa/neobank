@@ -17,7 +17,7 @@ CREATE TABLE "entries"
     "account_id" BIGINT NOT NULL
 );
 
-CREATE TABLE "transfers"
+CREATE TABLE "payments"
 (
     "id" BIGSERIAL PRIMARY KEY,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT(now()),
@@ -28,11 +28,11 @@ CREATE TABLE "transfers"
 );
 
 ALTER TABLE "entries" ADD FOREIGN KEY ("account_id") REFERENCES "accounts"("id");
-ALTER TABLE "transfers" ADD FOREIGN KEY ("from_account_id") REFERENCES "accounts"("id");
-ALTER TABLE "transfers" ADD FOREIGN KEY ("to_account_id") REFERENCES "accounts"("id");
+ALTER TABLE "payments" ADD FOREIGN KEY ("from_account_id") REFERENCES "accounts"("id");
+ALTER TABLE "payments" ADD FOREIGN KEY ("to_account_id") REFERENCES "accounts"("id");
 
 CREATE INDEX "accounts_index_0" ON "accounts" ("owner");
 CREATE INDEX "entries_index_1" ON "entries" ("account_id");
-CREATE INDEX "transfers_index_2" ON "transfers" ("from_account_id");
-CREATE INDEX "transfers_index_3" ON "transfers" ("to_account_id");
-CREATE INDEX "transfers_index_4" ON "transfers" ("from_account_id", "to_account_id");
+CREATE INDEX "payments_index_2" ON "payments" ("from_account_id");
+CREATE INDEX "payments_index_3" ON "payments" ("to_account_id");
+CREATE INDEX "payments_index_4" ON "payments" ("from_account_id", "to_account_id");

@@ -1,5 +1,5 @@
--- name: CreateTransfer :one
-INSERT INTO transfers (
+-- name: CreatePayment :one
+INSERT INTO payments (
   from_account_id,
   to_account_id,
   amount
@@ -7,12 +7,12 @@ INSERT INTO transfers (
   $1, $2, $3
 ) RETURNING *;
 
--- name: GetTransfer :one
-SELECT * FROM transfers
+-- name: GetPayment :one
+SELECT * FROM payments
 WHERE id = $1 LIMIT 1;
 
--- name: ListTransfers :many
-SELECT * FROM transfers
+-- name: ListPayments :many
+SELECT * FROM payments
 WHERE 
     from_account_id = $1 OR
     to_account_id = $2
