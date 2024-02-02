@@ -5,7 +5,7 @@ CREATE TABLE "accounts"
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT(now()),
     "owner" VARCHAR(255) NOT NULL,
     "balance" BIGINT NOT NULL,
-    "currency" VARCHAR(255)
+    "currency" VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "entries"

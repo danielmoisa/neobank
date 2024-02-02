@@ -10,7 +10,10 @@ dropdb:
 migrateup:
 	migrate -path db/migrations -database "postgresql://root:ultramegasecret@localhost:5432/neobank?sslmode=disable" -verbose up
 
-migrateup:
+migratedown:
 	migrate -path db/migrations -database "postgresql://root:ultramegasecret@localhost:5432/neobank?sslmode=disable" -verbose down
 
-.PHONY: postgres createdb dropdb migrateup migratedown
+sqlc:
+	sqlc generate
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc
