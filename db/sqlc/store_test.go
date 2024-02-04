@@ -32,6 +32,8 @@ func TestPaymentTx(t *testing.T) {
 		}()
 	}
 
+	existed := make(map[int]bool)
+
 	// check results
 	for i := 0; i < n; i++ {
 		err := <-errs
@@ -74,6 +76,35 @@ func TestPaymentTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// check accounts' balance
+		fromAccount := result.FromAccount
+		require.NotEmpty(t, fromAccount)
+		require.Equal(t, acc1.ID, fromAccount.ID)
+
+		toAccount := result.ToAccount
+		require.NotEmpty(t, toAccount)
+		require.Equal(t, acc2.ID, toAccount.ID)
+
+		diff1 := acc1.Balance - fromAccount.Balance
+		diff2 := toAccount.Balance - acc2.Balance
+		require.Equal(t, diff1, diff2)
+		require.True(t, diff1 > 0)
+		require.True(t, diff1%amount == 0)
+
+		k := int(diff1 / amount)
+		require.True(t, k >= 1 && k <= n)
+
+		require.NotContains(t, existed, k)
+		existed[k] = true
 	}
+
+	// check the final updated balance
+	updatedAccount1, err := store.GetAccount(context.Background(), acc1.ID)
+	require.NoError(t, err)
+
+	updatedAccount2, err := store.GetAccount(context.Background(), acc2.ID)
+	require.NoError(t, err)
+
+	require.Equal(t, acc1.Balance-int64(n)*amount, updatedAccount1.Balance)
+	require.Equal(t, acc2.Balance+int64(n)*amount, updatedAccount2.Balance)
 
 }
