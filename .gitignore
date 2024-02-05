@@ -18,3 +18,4 @@ vendor
 .vscode
 coverage.html
 coverage.out
+app.env
