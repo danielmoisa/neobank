@@ -15,7 +15,6 @@ type createUserRequest struct {
 	FullName string `json:"full_name" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
 }
-
 type createUserResponse struct {
 	Username          string    `json:"username"`
 	FullName          string    `json:"full_name"`
@@ -24,19 +23,30 @@ type createUserResponse struct {
 	CreatedAt         time.Time `json:"created_at"`
 }
 
+// createUser godoc
+// @Summary Create a user
+// @Description Create a new user with the specified details.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body createUserRequest true "Request body for creating a user"
+// @Success 201 {object} createUserResponse
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /users [post]
 func (server *Server) createUser(ctx echo.Context) error {
 	req := new(createUserRequest)
 	if err := ctx.Bind(req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	if err := ctx.Validate(req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	hash, err := utils.HashPassword(req.Password)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
 	user, err := server.store.CreateUser(ctx.Request().Context(), db.CreateUserParams{

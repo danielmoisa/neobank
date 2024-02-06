@@ -14,6 +14,47 @@ definitions:
     - currency
     - owner
     type: object
+  api.createUserRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    - username
+    type: object
+  api.createUserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      password_changed_at:
+        type: string
+      username:
+        type: string
+    type: object
+  api.paymentRequest:
+    properties:
+      amount:
+        type: integer
+      currency:
+        type: string
+      from_account_id:
+        type: integer
+      to_account_id:
+        type: integer
+    type: object
   db.Account:
     properties:
       balance:
@@ -26,6 +67,21 @@ definitions:
         type: integer
       owner:
         type: string
+      updated_at:
+        type: string
+    type: object
+  db.Payment:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: string
+      from_account_id:
+        type: integer
+      id:
+        type: integer
+      to_account_id:
+        type: integer
       updated_at:
         type: string
     type: object
@@ -78,7 +134,7 @@ paths:
             $ref: '#/definitions/api.ErrorResponse'
       summary: List accounts
       tags:
-      - accounts
+      - Accounts
     post:
       consumes:
       - application/json
@@ -107,7 +163,7 @@ paths:
             $ref: '#/definitions/api.ErrorResponse'
       summary: Create an account
       tags:
-      - accounts
+      - Accounts
   /accounts/{id}:
     get:
       consumes:
@@ -140,5 +196,69 @@ paths:
             $ref: '#/definitions/api.ErrorResponse'
       summary: Get an account by ID
       tags:
-      - accounts
+      - Accounts
+  /payments:
+    post:
+      consumes:
+      - application/json
+      description: Transfer funds between two accounts.
+      parameters:
+      - description: Request body for creating a payment
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.paymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/db.Payment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Account Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Create a payment
+      tags:
+      - Payments
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the specified details.
+      parameters:
+      - description: Request body for creating a user
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.createUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.createUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Create a user
+      tags:
+      - Users
 swagger: "2.0"
