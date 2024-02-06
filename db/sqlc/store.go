@@ -6,19 +6,24 @@ import (
 	"fmt"
 )
 
-type Store struct {
+type Store interface {
+	Querier
+	PaymentTx(ctx context.Context, args PaymentTxParams) (PaymentTxResult, error)
+}
+
+type SQLStore struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db),
 	}
 }
 
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -50,7 +55,7 @@ type PaymentTxResult struct {
 	ToEntry     Entry   `json:"to_entry"`
 }
 
-func (store *Store) PaymentTx(ctx context.Context, args PaymentTxParams) (PaymentTxResult, error) {
+func (store *SQLStore) PaymentTx(ctx context.Context, args PaymentTxParams) (PaymentTxResult, error) {
 	var result PaymentTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {

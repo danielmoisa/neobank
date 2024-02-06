@@ -10,11 +10,11 @@ import (
 )
 
 type Server struct {
-	store  *db.Store
+	store  db.Store
 	router *echo.Echo
 }
 
-func NewServer(store *db.Store) *Server {
+func NewServer(store db.Store) *Server {
 	server := &Server{store: store}
 	router := echo.New()
 
