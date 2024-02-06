@@ -14,14 +14,25 @@ type createAccountRequest struct {
 	Currency string `json:"currency" validate:"required"`
 }
 
+// createAccount godoc
+// @Summary Create an account
+// @Description Create a new account with the specified owner and currency.
+// @Tags Accounts
+// @Accept json
+// @Produce json
+// @Param request body createAccountRequest true "Request body for creating an account"
+// @Success 201 {object} db.Account
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /accounts [post]
 func (server *Server) createAccount(ctx echo.Context) error {
 	req := new(createAccountRequest)
 	if err := ctx.Bind(req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	if err := ctx.Validate(req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	account, err := server.store.CreateAccount(ctx.Request().Context(), db.CreateAccountParams{
@@ -30,7 +41,7 @@ func (server *Server) createAccount(ctx echo.Context) error {
 		Balance:  0,
 	})
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
 	return ctx.JSON(http.StatusCreated, account)
@@ -40,28 +51,40 @@ type getAccountRequest struct {
 	ID int64 `uri:"id" validate:"required"`
 }
 
+// getAccount godoc
+// @Summary Get an account by ID
+// @Description Retrieve an account by its unique ID.
+// @Tags Accounts
+// @Accept json
+// @Produce json
+// @Param id path int true "Account ID"
+// @Success 200 {object} db.Account
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 404 {object} ErrorResponse "Account Not Found"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /accounts/{id} [get]
 func (server *Server) getAccount(ctx echo.Context) error {
 	req := new(getAccountRequest)
 
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid ID"})
 	}
 
 	req.ID = id
 
 	if err := ctx.Validate(req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	account, err := server.store.GetAccount(ctx.Request().Context(), req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return ctx.JSON(http.StatusNotFound, map[string]string{"error": "Account not found"})
+			return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "Account not found"})
 		}
 
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
 	}
 
 	return ctx.JSON(http.StatusOK, account)
@@ -72,6 +95,18 @@ type listAccountRequest struct {
 	PageSize int32 `form:"page_size" validate:"required,min=5,max=10"`
 }
 
+// listAccounts godoc
+// @Summary List accounts
+// @Description Get a list of accounts with pagination.
+// @Tags Accounts
+// @Accept json
+// @Produce json
+// @Param page_id query int true "Page ID for pagination"
+// @Param page_size query int true "Number of accounts per page (min: 5, max: 10)"
+// @Success 200 {array} db.Account
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /accounts [get]
 func (server *Server) listAccounts(ctx echo.Context) error {
 	req := new(listAccountRequest)
 
@@ -80,19 +115,19 @@ func (server *Server) listAccounts(ctx echo.Context) error {
 
 	pageID, err := strconv.ParseInt(pageIDStr, 10, 32)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid page_id"})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid page_id"})
 	}
 
 	pageSize, err := strconv.ParseInt(pageSizeStr, 10, 32)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid page_size"})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid page_size"})
 	}
 
 	req.PageID = int32(pageID)
 	req.PageSize = int32(pageSize)
 
 	if err := ctx.Validate(req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	accounts, err := server.store.ListAccounts(ctx.Request().Context(), db.ListAccountsParams{
@@ -100,7 +135,7 @@ func (server *Server) listAccounts(ctx echo.Context) error {
 		Offset: (req.PageID - 1) * req.PageSize,
 	})
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
 	}
 
 	return ctx.JSON(http.StatusOK, accounts)

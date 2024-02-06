@@ -25,4 +25,6 @@ serve:
 mock:
 	mockgen -package mockdb -destination db/mocks/store.go  github.com/danielmoisa/neobank/db/sqlc Store
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server mock
+docs:
+	swag init
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server mock docs

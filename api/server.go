@@ -4,9 +4,11 @@ import (
 	"net/http"
 
 	db "github.com/danielmoisa/neobank/db/sqlc"
+	_ "github.com/danielmoisa/neobank/docs"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type Server struct {
@@ -26,6 +28,7 @@ func NewServer(store db.Store) *Server {
 	router.Use(middleware.Recover())
 
 	// Routes
+	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	router.POST("/accounts", server.createAccount)
 	router.GET("/accounts/:id", server.getAccount)
 	router.GET("/accounts", server.listAccounts)
@@ -51,4 +54,8 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return nil
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
 }
