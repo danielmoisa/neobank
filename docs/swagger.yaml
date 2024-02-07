@@ -31,18 +31,23 @@ definitions:
     - password
     - username
     type: object
-  api.createUserResponse:
+  api.loginUserRequest:
     properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      full_name:
-        type: string
-      password_changed_at:
+      password:
+        minLength: 6
         type: string
       username:
         type: string
+    required:
+    - password
+    - username
+    type: object
+  api.loginUserResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/api.userResponse'
     type: object
   api.paymentRequest:
     properties:
@@ -54,6 +59,19 @@ definitions:
         type: integer
       to_account_id:
         type: integer
+    type: object
+  api.userResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      password_changed_at:
+        type: string
+      username:
+        type: string
     type: object
   db.Account:
     properties:
@@ -85,7 +103,7 @@ definitions:
       updated_at:
         type: string
     type: object
-host: nobank.swagger.io
+host: neobank.swagger.io
 info:
   contact:
     email: support@swagger.io
@@ -249,7 +267,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.createUserResponse'
+            $ref: '#/definitions/api.userResponse'
         "400":
           description: Bad Request
           schema:
@@ -259,6 +277,36 @@ paths:
           schema:
             $ref: '#/definitions/api.ErrorResponse'
       summary: Create a user
+      tags:
+      - Users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Login a new user with the specified details.
+      parameters:
+      - description: Request body for login in a user
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.loginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.loginUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Login a user
       tags:
       - Users
 swagger: "2.0"
