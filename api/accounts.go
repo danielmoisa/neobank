@@ -2,15 +2,16 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 
 	db "github.com/danielmoisa/neobank/db/sqlc"
+	"github.com/danielmoisa/neobank/tokens"
 	"github.com/labstack/echo/v4"
 )
 
 type createAccountRequest struct {
-	Owner    string `json:"owner" validate:"required"`
 	Currency string `json:"currency" validate:"required"`
 }
 
@@ -35,8 +36,10 @@ func (server *Server) createAccount(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
+	authPayload := ctx.Get(authorizationPayloadKey).(*tokens.Payload)
+
 	account, err := server.store.CreateAccount(ctx.Request().Context(), db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    authPayload.Username,
 		Currency: req.Currency,
 		Balance:  0,
 	})
@@ -87,6 +90,12 @@ func (server *Server) getAccount(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
 	}
 
+	authPayload := ctx.Get(authorizationPayloadKey).(*tokens.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belongs to auth user")
+		return ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+	}
+
 	return ctx.JSON(http.StatusOK, account)
 }
 
@@ -130,7 +139,10 @@ func (server *Server) listAccounts(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
+	authPayload := ctx.Get(authorizationPayloadKey).(*tokens.Payload)
+
 	accounts, err := server.store.ListAccounts(ctx.Request().Context(), db.ListAccountsParams{
+		Owner:  authPayload.Username,
 		Limit:  req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	})

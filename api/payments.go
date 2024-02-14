@@ -2,10 +2,12 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
 	db "github.com/danielmoisa/neobank/db/sqlc"
+	"github.com/danielmoisa/neobank/tokens"
 	"github.com/labstack/echo/v4"
 )
 
@@ -39,11 +41,21 @@ func (server *Server) createPayment(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
-	if !server.validAccount(ctx, req.FromAccountID, req.Currency) {
+	fromAccount, valid := server.validAccount(ctx, req.FromAccountID, req.Currency)
+
+	if !valid {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid account"})
 	}
 
-	if !server.validAccount(ctx, req.ToAccountID, req.Currency) {
+	authPayload := ctx.Get(authorizationPayloadKey).(*tokens.Payload)
+	if fromAccount.Owner != authPayload.Username {
+		err := errors.New("account doesn't belongs to auth user")
+		return ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+	}
+
+	_, valid = server.validAccount(ctx, req.ToAccountID, req.Currency)
+
+	if !valid {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid account"})
 	}
 
@@ -62,23 +74,23 @@ func (server *Server) createPayment(ctx echo.Context) error {
 
 }
 
-func (server *Server) validAccount(ctx echo.Context, accountID int64, currency string) bool {
+func (server *Server) validAccount(ctx echo.Context, accountID int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx.Request().Context(), accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
-			return false
+			return account, false
 		}
 
 		ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		return false
+		return account, false
 	}
 
 	if account.Currency != currency {
 		err := fmt.Errorf("account [%d] currency mismatch: %s vs %s", account.ID, account.Currency, currency)
 		ctx.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-		return false
+		return account, false
 	}
 
-	return true
+	return account, true
 }

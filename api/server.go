@@ -28,25 +28,27 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 	}
 
 	server := &Server{store: store, tokenMaker: tokenMaker, config: config}
-	router := echo.New()
+	e := echo.New()
 
 	// Register validator
-	router.Validator = &CustomValidator{validator: validator.New()}
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Middleware
-	router.Use(middleware.Logger())
-	router.Use(middleware.Recover())
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
 	// Routes
-	router.GET("/swagger/*", echoSwagger.WrapHandler)
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts", server.listAccounts)
-	router.POST("/payments", server.createPayment)
-	router.POST("/users", server.createUser)
-	router.POST("/users/login", server.loginUser)
+	e.POST("/users", server.createUser)
+	e.POST("/users/login", server.loginUser)
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	server.router = router
+	// Protected routes
+	e.POST("/accounts", server.createAccount, authMiddleware(server.tokenMaker))
+	e.GET("/accounts/:id", server.getAccount, authMiddleware(server.tokenMaker))
+	e.GET("/accounts", server.listAccounts, authMiddleware(server.tokenMaker))
+	e.POST("/payments", server.createPayment, authMiddleware(server.tokenMaker))
+
+	server.router = e
 	return server, nil
 }
 

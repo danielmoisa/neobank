@@ -13,10 +13,11 @@ RETURNING *;
 SELECT * FROM accounts WHERE id = $1 LIMIT 1;
 
 -- name: ListAccounts :many
-SELECT * FROM accounts 
+SELECT * FROM accounts
+WHERE owner = $1 
 ORDER BY id
-LIMIT $1
-OFFSET $2;
+LIMIT $2
+OFFSET $3;
 
 -- name: UpdateAccount :one
 UPDATE accounts
