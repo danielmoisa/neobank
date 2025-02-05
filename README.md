@@ -22,5 +22,6 @@ Ensure you have the following installed:
 
 These instructions will help you set up the project locally for development and testing.
 - run `docker-compose up -d` to setup the posgresql and api docker services
-- `go run main.go` to start the app
+- run `make migrateup`
+- `go run main.go` to start the app or `make serve`
 - swagger localhost:8080/swagger/index.html#/
