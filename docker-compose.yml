@@ -1,11 +1,14 @@
-version: '3.9'
 services:
   postgres:
     image: postgres:12-alpine
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=ultramegasecret
-      - POSTGRES_DB=neobank
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    networks:
+      - default
   api:
     build:
       context: .
@@ -15,7 +18,7 @@ services:
     networks:
       - default
     environment:
-      - DB_SOURCE=postgresql://root:ultramegasecret@postgres:5432/neobank?sslmode=disable
+      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}
     depends_on:
       - postgres
     entrypoint:
